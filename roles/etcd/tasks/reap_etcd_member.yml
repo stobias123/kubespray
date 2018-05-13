@@ -1,0 +1,16 @@
+# if the member doesn't have etcdctl then skip
+# if the member has etcdctl then run our commands.
+# once we run our commands register success
+
+
+# Command
+## List members
+## If any of the members has a line that doesn't contain healthy..
+### Reap it.
+
+- name: Check if the cluster has any unhealthy nodes.
+  shell: etcdctl --endpoints https://localhost:2379 --cert-file /etc/ssl/etcd/ssl/ca.pem --key-file /etc/ssl/etcd/ssl/ca-key.pem cluster-health | grep "^member" | grep -v "healthy" | awk '{print $2}'
+  register: unhealthy_node_id
+  ignore_errors: true
+- name: Reap nodes that aren't found.
+  shell: etcdctl --endpoints https://localhost:2379 --cert-file /etc/ssl/etcd/ssl/ca.pem --key-file /etc/ssl/etcd/ssl/ca-key.pem member remove {{ unhealthy_node_id.stdout }}
